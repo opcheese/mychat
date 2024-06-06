@@ -9,10 +9,39 @@ import remarkGfm from 'remark-gfm'
 import remarkMath from 'remark-math'
 import { StreamableValue, useStreamableValue } from 'ai/rsc'
 import { useStreamableText } from '@/lib/hooks/use-streamable-text'
+import { useCopyToClipboard } from '@/lib/hooks/use-copy-to-clipboard'
+import { Button } from '@/components/ui/button'
+import { IconCheck, IconCopy, IconRefresh } from '@/components/ui/icons'
+import { useAIState, useActions, useUIState } from 'ai/rsc'
+import { type AI } from '@/lib/chat/actions'
 
 // Different types of message bubbles.
 
-export function UserMessage({ children }: { children: React.ReactNode }) {
+export function UserMessage({ children, messageId }: { children: React.ReactNode, messageId?: string }) {
+
+  const { isCopied, copyToClipboard } = useCopyToClipboard({ timeout: 2000 })
+  const [messages, setMessages] = useUIState<typeof AI>()
+
+  const onCopy = () => {
+    if (isCopied) return
+    copyToClipboard(children!.toString())
+  }
+  const { regenUserMessage } = useActions()
+
+  const onRefresh = async () => {
+
+    const responseMessage = await regenUserMessage(messageId)
+    let messageIndex = messages.findIndex(message => message.display!["props"]["messageId"] === messageId);
+    let newMessages = [...messages]
+    // If such a message is found, truncate the array to only include messages before it
+    if (messageIndex !== -1) {
+      newMessages.splice(messageIndex + 1, messages.length - messageIndex);
+    } else {
+      console.log("No message with id " + messageId + " was found.");
+    }
+    setMessages(currentMessages => [...newMessages, responseMessage])
+  }
+
   return (
     <div className="group relative flex items-start md:-ml-12">
       <div className="flex size-[25px] shrink-0 select-none items-center justify-center rounded-md border bg-background shadow-sm">
@@ -21,6 +50,16 @@ export function UserMessage({ children }: { children: React.ReactNode }) {
       <div className="ml-4 flex-1 space-y-2 overflow-hidden pl-2">
         {children}
       </div>
+      <Button variant="ghost" size="icon" onClick={onCopy}>
+        {isCopied ? <IconCheck /> : <IconCopy />}
+        <span className="sr-only">Copy message</span>
+      </Button>
+      {messageId &&
+        <Button variant="ghost" size="icon" onClick={onRefresh}>
+          <IconRefresh />
+
+        </Button>
+      }
     </div>
   )
 }
