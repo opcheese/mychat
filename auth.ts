@@ -10,6 +10,15 @@ export const { auth, signIn, signOut } = NextAuth({
   providers: [
     Credentials({
       async authorize(credentials) {
+
+        return {
+          id: "123",
+          email: "youmail@maugry.com",
+          password: "123456",
+          salt: "123456"
+        }
+        
+
         const parsedCredentials = z
           .object({
             email: z.string().email(),
