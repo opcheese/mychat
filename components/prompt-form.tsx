@@ -17,12 +17,18 @@ import {
 import { useEnterSubmit } from '@/lib/hooks/use-enter-submit'
 import { nanoid } from 'nanoid'
 import { useRouter } from 'next/navigation'
+import { useOllamaModel} from '@/lib/hooks/use-ollama-model'
+import { usePromptMaker } from '@/lib/hooks/use-promptmaker'
 
 export function PromptForm({
   input,
+  template,
+  sample,
   setInput
 }: {
-  input: string
+  input: string,
+  template: string|null,
+  sample: string|null,
   setInput: (value: string) => void
 }) {
   const router = useRouter()
@@ -30,6 +36,7 @@ export function PromptForm({
   const inputRef = React.useRef<HTMLTextAreaElement>(null)
   const { submitUserMessage } = useActions()
   const [_, setMessages] = useUIState<typeof AI>()
+  const {chosenModelName} = useOllamaModel()
 
   React.useEffect(() => {
     if (inputRef.current) {
@@ -62,7 +69,9 @@ export function PromptForm({
         ])
 
         // Submit and get response message
-        const responseMessage = await submitUserMessage(value)
+        let prompt = usePromptMaker(value,template,sample)
+        console.log(prompt)
+        const responseMessage = await submitUserMessage(prompt,chosenModelName)
         setMessages(currentMessages => [...currentMessages, responseMessage])
       }}
     >

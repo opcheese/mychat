@@ -11,6 +11,11 @@ import { useAIState, useActions, useUIState } from 'ai/rsc'
 import type { AI } from '@/lib/chat/actions'
 import { nanoid } from 'nanoid'
 import { UserMessage } from './stocks/message'
+import { ComboTemplate } from './combo-template'
+import { useAiTemplates } from '@/lib/hooks/use-aitemplates'
+import { useAiSamples } from '@/lib/hooks/use-aisamples'
+import { AiTemplate } from '@/lib/types'
+
 
 export interface ChatPanelProps {
   id?: string
@@ -36,26 +41,31 @@ export function ChatPanel({
 
   const exampleMessages = [
     {
-      heading: 'What are the',
-      subheading: 'trending memecoins today?',
-      message: `What are the trending memecoins today?`
+      heading: 'Generate a short advice for a software engineer',
+      subheading: 'about knowlegde management.',
+      message: `Generate a short advice for a software engineer about knowlegde management.`
     },
-    {
-      heading: 'What is the price of',
-      subheading: '$DOGE right now?',
-      message: 'What is the price of $DOGE right now?'
-    },
-    {
-      heading: 'I would like to buy',
-      subheading: '42 $DOGE',
-      message: `I would like to buy 42 $DOGE`
-    },
-    {
-      heading: 'What are some',
-      subheading: `recent events about $DOGE?`,
-      message: `What are some recent events about $DOGE?`
-    }
   ]
+  const [currentTemplate, setCurrentTemplate] = React.useState<AiTemplate|null>(null);
+  const [currentSample, setCurrentSample] = React.useState<AiTemplate|null>(null);
+
+  const aiTemplatesState = useAiTemplates();
+  const aiSamplesState = useAiSamples();
+
+
+  let comtoTemplates = (
+    <ComboTemplate templates={aiTemplatesState.data?.templates} currentTemplate={currentTemplate} setTemplate={setCurrentTemplate} />
+  );
+  if (aiTemplatesState.loading)  comtoTemplates = <p>Loading...</p>;
+  if (aiTemplatesState.error) comtoTemplates= <p>Error: {aiTemplatesState.error.message}</p>;
+
+  let comtoSamples = (
+    <ComboTemplate templates={aiSamplesState.data?.samples} currentTemplate={currentSample} setTemplate={setCurrentSample} />
+  );
+  if (aiSamplesState.loading)  comtoSamples = <p>Loading...</p>;
+  if (aiSamplesState.error) comtoSamples= <p>Error: {aiSamplesState.error.message}</p>;
+
+
 
   return (
     <div className="fixed inset-x-0 bottom-0 w-full bg-gradient-to-b from-muted/30 from-0% to-muted/30 to-50% duration-300 ease-in-out animate-in dark:from-background/10 dark:from-10% dark:to-background/80 peer-[[data-state=open]]:group-[]:lg:pl-[250px] peer-[[data-state=open]]:group-[]:xl:pl-[300px]">
@@ -100,6 +110,10 @@ export function ChatPanel({
             ))}
         </div>
 
+          
+        {comtoTemplates}
+        {comtoSamples}
+
         {messages?.length >= 2 ? (
           <div className="flex h-12 items-center justify-center">
             <div className="flex space-x-2">
@@ -129,8 +143,10 @@ export function ChatPanel({
           </div>
         ) : null}
 
+
+
         <div className="space-y-4 border-t bg-background px-4 py-2 shadow-lg sm:rounded-t-xl sm:border md:py-4">
-          <PromptForm input={input} setInput={setInput} />
+          <PromptForm template={currentTemplate?.content} sample={currentSample?.content} input={input} setInput={setInput} />
           <FooterText className="hidden sm:block" />
         </div>
       </div>

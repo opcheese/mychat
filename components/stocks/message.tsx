@@ -72,7 +72,18 @@ export function BotMessage({
   className?: string
 }) {
   const text = useStreamableText(content)
+  const { isCopied, copyToClipboard } = useCopyToClipboard({ timeout: 2000 })
+  
 
+  const onCopy = () => {
+    if (isCopied) return
+    if (typeof content === 'string') {
+      copyToClipboard(content.toString())
+    } else {
+      const [data, error, pending] = useStreamableValue(content);
+      copyToClipboard(data!.toString())
+    }
+  }
   return (
     <div className={cn('group relative flex items-start md:-ml-12', className)}>
       <div className="flex size-[24px] shrink-0 select-none items-center justify-center rounded-md border bg-primary text-primary-foreground shadow-sm">
@@ -121,6 +132,10 @@ export function BotMessage({
           {text}
         </MemoizedReactMarkdown>
       </div>
+      <Button variant="ghost" size="icon" onClick={onCopy}>
+        {isCopied ? <IconCheck /> : <IconCopy />}
+        <span className="sr-only">Copy message</span>
+      </Button>
     </div>
   )
 }

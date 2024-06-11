@@ -35,10 +35,11 @@ import { saveChat } from '@/app/actions'
 import { SpinnerMessage, UserMessage } from '@/components/stocks/message'
 import { Chat, Message } from '@/lib/types'
 import { auth } from '@/auth'
+import { OllamaModel } from '@/lib/types'
 
 
 
-async function submitUserMessage(content: string) {
+async function submitUserMessage(content: string, modelName:string) {
   'use server'
 
   const aiState = getMutableAIState<typeof AI>()
@@ -59,7 +60,7 @@ async function submitUserMessage(content: string) {
   let textNode: undefined | React.ReactNode
 
   const result = await streamUI({
-    model: ollama('codestral:latest'),
+    model: ollama(modelName),
     initial: <SpinnerMessage />,    
     messages: [
       ...aiState.get().messages.map((message: any) => ({
@@ -183,11 +184,15 @@ export type UIState = {
   display: React.ReactNode
 }[]
 
+// export type OllamaSettings = {
+//   model?: OllamaModel
+// }
+
 export const AI = createAI<AIState, UIState>({
   actions: {
     submitUserMessage,    
     regenUserMessage
-  },
+  },  
   initialUIState: [],
   initialAIState: { chatId: nanoid(), messages: [] },
   onGetUIState: async () => {
@@ -236,6 +241,10 @@ export const AI = createAI<AIState, UIState>({
     }
   }
 })
+
+// export const CurrentOllamaSettings:OllamaSettings = {
+//   model: undefined
+// }
 
 
 
