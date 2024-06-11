@@ -10,9 +10,7 @@ import Image from "next/image";
 import { useState } from "react";
 import { DropzoneOptions } from "react-dropzone";
 
-import getConfig from 'next/config';
 
-const { publicRuntimeConfig } = getConfig();
 
 const FileUploadDropzone = () => {
   const [files, setFiles] = useState<File[] | null>([]);
@@ -26,7 +24,7 @@ const FileUploadDropzone = () => {
     });
   
     try {
-      const response = await fetch(`${publicRuntimeConfig.API_URL}/upload`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API}/upload`, {
         method: 'POST',
         body: formData,
       });
